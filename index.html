@@ -208,7 +208,10 @@ button.disabled:hover {
 <body>
 <h1>Picker</h1>
 
-<p>You can include any content you want here.</p>
+<p>
+//You can include any content you want here.
+
+</p>
 
 <div id="container">
 
@@ -474,21 +477,13 @@ var items = [
 {id: '	u477u-godot/u477u-godot-thum.png	', name: '	Godot	', image: '	https://rangers.lerico.net/res/	u477u-godot/u477u-godot-thum.png	'},
 {id: '	u476u-maya/u476u-maya-thum.png	', name: '	Maya	', image: '	https://rangers.lerico.net/res/	u476u-maya/u476u-maya-thum.png	'},
 {id: '	u475u-miles/u475u-miles-thum.png	', name: '	Edgeworth	', image: '	https://rangers.lerico.net/res/	u475u-miles/u475u-miles-thum.png	'},
-{id: '	u474u-wright/u474u-wright-thum.png	', name: '	Phoenix	', image: '	https://rangers.lerico.net/res/	u474u-wright/u474u-wright-thum.png	'},
-{id: '	u473u-pico/u473u-pico-thum.png	', name: '	Starlit Sea Pico	', image: '	https://rangers.lerico.net/res/	u473u-pico/u473u-pico-thum.png	'},
-{id: '	u471u-cony/u471u-cony-thum.png	', name: '	Shining Sea Cony	', image: '	https://rangers.lerico.net/res/	u471u-cony/u471u-cony-thum.png	'},
-{id: '	u468h-chunli/u468h-chunli-thum.png	', name: '	Chun-Li	', image: '	https://rangers.lerico.net/res/	u468h-chunli/u468h-chunli-thum.png	'},
-{id: '	u467h-ryu/u467h-ryu-thum.png	', name: '	Ryu	', image: '	https://rangers.lerico.net/res/	u467h-ryu/u467h-ryu-thum.png	'},
-{id: '	u464u-brown/u464u-brown-thum.png	', name: '	Shish Kebab Brown	', image: '	https://rangers.lerico.net/res/	u464u-brown/u464u-brown-thum.png	'},
-{id: '	u458h-jessica/u458h-jessica-thum.png	', name: '	Prophet Jessica	', image: '	https://rangers.lerico.net/res/	u458h-jessica/u458h-jessica-thum.png	'},
-{id: '	u406u-cony/u406u-cony-thum.png	', name: '	Coast Guard Cony	', image: '	https://rangers.lerico.net/res/	u406u-cony/u406u-cony-thum.png	'},
-{id: '	u431h-cony/u431h-cony-thum.png	', name: '	Purple Champagne Cony	', image: '	https://rangers.lerico.net/res/	u431h-cony/u431h-cony-thum.png	'},
-{id: '	u388h-moon/u388h-moon-thum.png	', name: '	Dark Hero Moon	', image: '	https://rangers.lerico.net/res/	u388h-moon/u388h-moon-thum.png	'}
+{id: '	u474u-wright/u474u-wright-thum.png	', name: '	Phoenix	', image: '	https://rangers.lerico.net/res/	u474u-wright/u474u-wright-thum.png	'}
 
 ];
 
 var myPicker = new picker.Picker({
-    items: items
+    items: items,
+    localStorageKey: '12345'
 });
 
 var pickerUI = new PickerUI(myPicker, {
