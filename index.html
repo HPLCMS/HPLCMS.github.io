@@ -409,10 +409,11 @@ var items = [
 
 var myPicker = new picker.Picker({
     items: items,
-    localStorageKey: '12345'
+    localStorageKey: 'picker-state',
     defaultSettings: {
         minBatchSize: 3,
         maxBatchSize: 30
+    }
 });
 
 <select id="max-batch-size" class="setting-number"><option value="15">15</option><option value="30">30</option></select>
