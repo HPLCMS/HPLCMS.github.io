@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0">
+<title>Picker</title>
+<style>
+body {
+    background:#FFF;
+    color:#000;
+    font-family:verdana, sans-serif;
+    font-size:10pt;
+    margin:0;
+    padding:10px;
+}
+
+a:link, a:visited {
+    color:#008;
+    font-weight:bold;
+    text-decoration:none;
+}
+
+a:active, a:hover {
+    color:#ACF;
+}
+
+.info {
+    font-weight:bold;
+}
+
+button {
+    font-family:inherit;
+    cursor:pointer;
+    border:0;
+    border-radius:3px;
+    padding:0.3em 0.5em;
+    background:#CCC;
+    color:#000;
+}
+
+button:hover {
+    background:#DDD;
+}
+
+button.disabled {
+    background:#DDD;
+    color:#888;
+    cursor:not-allowed;
+}
+
+button.disabled:hover {
+    background:#DDD;
+}
+
+#container {
+    position:relative;
+    margin-left:-10px;
+    margin-right:-10px;
+    padding:10px;
+    overflow:hidden;
+}
+
+@media (min-width:1024px) {
+    /* Put the found favorites beside the picking div when the window is sufficiently large */
+    #picking {
+        float:left;
+        width:636px;
+    }
+
+    #secondary {
+        margin-left:646px;
+    }
+}
+
+@media (min-width:1300px) {
+    /* Once we get to the point where 636px is less than half of the width of the screen, make the picking div just take up half */
+    #picking {
+        width:50%;
+    }
+
+    #secondary {
+        margin-left:51%;
+    }
+}
+
+#pick {
+    background:#58F;
+    color:#FFF;
+    font-size:larger;
+    font-weight:bold;
+    width:6em;
+    border-radius:5px;
+    margin-right:10px;
+}
+
+#pick.disabled {
+    background:#ACF;
+}
+
+#pick:hover {
+    background:#ACF;
+}
+
+.item-list {
+    padding:0;
+    list-style-type:none;
+    line-height:100px;
+}
+
+.item-list li {
+    margin:0;
+    display:inline-block;
+    height:100px;
+    width:100px;
+    line-height:100px;
+    border:3px solid transparent;
+    text-align:center;
+    position:relative;
+    vertical-align:top;
+    overflow:hidden;
+    border-radius:100%;
+    background:#F7F7F7;
+    color:#000;
+}
+
+.item-list li img {
+    vertical-align:middle;
+    max-height:100%;
+    max-width:100%;
+}
+
+.item-list li span {
+    display:inline-block;
+    vertical-align:middle;
+    line-height:1.2;
+}
+
+@media (max-width:636px) {
+    .item-list {
+        line-height:75px;
+    }
+
+    .item-list li {
+        line-height:75px;
+        height:75px;
+        width:75px;
+    }
+}
+
+@media (max-width:423px) {
+    .item-list {
+        line-height:50px;
+    }
+
+    .item-list li {
+        line-height:50px;
+        height:50px;
+        width:50px;
+    }
+}
+
+#evaluating li {
+    cursor:pointer;
+}
+
+#favorites li {
+    cursor:move;
+}
+
+.item-list li:hover {
+    background:#CDF;
+}
+
+.item-list.sorting li:hover {
+    background:#F7F7F7;
+}
+
+#evaluating li.selected {
+    border:3px solid #7AC;
+}
+
+#evaluating, #buttons {
+    text-align:center;
+    margin:auto;
+}
+
+#evaluating li.notice {
+    width:auto;
+    height:auto;
+    max-width:260px;
+    margin:auto;
+    background:#F7F7F7;
+    border-radius:10px;
+    padding:30px 30px;
+    color:#000;
+    text-align:center;
+    line-height:1.4;
+    cursor:auto;
+    font-size:10pt;
+}
+
+#buttons {
+    margin-top:30px;
+    position:relative;
+    z-index:3;
+}
+</style>
+</head>
+<body>
+<h1>Picker</h1>
+
+<p>You can include any content you want here.</p>
+
+<div id="container">
+
+<div id="picking">
+<ul id="evaluating" class="item-list">
+</ul>
+
+<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button></p>
+</div>
+
+<div id="secondary">
+<h2>Found favorites</h2>
+
+<ol id="favorites" class="item-list">
+</ol>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="picker.js"></script>
+<script src="picker-ui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.7.0/Sortable.min.js"></script>
+<script>
+'use strict';
+
+var items = [
+    // Define your items here
+{id: '	pitcher	', name: '	Pitcher Sally	', image: '	https://cdn.discordapp.com/attachments/761548548696178708/1083896954267897876/u1304e-sally-thum-140.png		'},
+{id: '	u3006e-cony/u3006e-cony-thum.png	', name: '	Wine Soda Cony	', image: '	https://rangers.lerico.net/res/	u3006e-cony/u3006e-cony-thum.png	'},
+{id: '	u1298h-vt/u1298h-vt-thum.png	', name: '	Veldora	', image: '	https://rangers.lerico.net/res/	u1298h-vt/u1298h-vt-thum.png	'},
+{id: '	u1297h-sn/u1297h-sn-thum.png	', name: '	Shuna	', image: '	https://rangers.lerico.net/res/	u1297h-sn/u1297h-sn-thum.png	'},
+{id: '	u1296e-db/u1296e-db-thum.png	', name: '	Diablo	', image: '	https://rangers.lerico.net/res/	u1296e-db/u1296e-db-thum.png	'},
+{id: '	u1294e-rt/u1294e-rt-thum.png	', name: '	Demon Lord Rimuru	', image: '	https://rangers.lerico.net/res/	u1294e-rt/u1294e-rt-thum.png	'},
+{id: '	u3002e-brown/u3002e-brown-thum.png	', name: '	Golden Brown	', image: '	https://rangers.lerico.net/res/	u3002e-brown/u3002e-brown-thum.png	'},
+{id: '	u1291e-moon/u1291e-moon-thum.png	', name: '	Extreme Dieter Moon	', image: '	https://rangers.lerico.net/res/	u1291e-moon/u1291e-moon-thum.png	'},
+{id: '	u1289e-boss/u1289e-boss-thum.png	', name: '	Planet Balance Ball Boss	', image: '	https://rangers.lerico.net/res/	u1289e-boss/u1289e-boss-thum.png	'},
+{id: '	u1287h-sally/u1287h-sally-thum.png	', name: '	Aerobicist Sally	', image: '	https://rangers.lerico.net/res/	u1287h-sally/u1287h-sally-thum.png	'},
+{id: '	u1286e-sally/u1286e-sally-thum.png	', name: '	Fairy Santa Sally	', image: '	https://rangers.lerico.net/res/	u1286e-sally/u1286e-sally-thum.png	'},
+{id: '	u1283h-am/u1283h-am-thum.png	', name: '	Armin	', image: '	https://rangers.lerico.net/res/	u1283h-am/u1283h-am-thum.png	'},
+{id: '	u1282h-hj/u1282h-hj-thum.png	', name: '	Hange	', image: '	https://rangers.lerico.net/res/	u1282h-hj/u1282h-hj-thum.png	'},
+{id: '	u1281e-lv/u1281e-lv-thum.png	', name: '	FS.Levi	', image: '	https://rangers.lerico.net/res/	u1281e-lv/u1281e-lv-thum.png	'},
+{id: '	u1279e-er/u1279e-er-thum.png	', name: '	FS.Eren	', image: '	https://rangers.lerico.net/res/	u1279e-er/u1279e-er-thum.png	'},
+{id: '	u1273e-dwight/u1273e-dwight-thum.png	', name: '	Master Sushi Chef Dwight	', image: '	https://rangers.lerico.net/res/	u1273e-dwight/u1273e-dwight-thum.png	'},
+{id: '	u1271e-sally/u1271e-sally-thum.png	', name: '	Super Fatty Tuna Roll SALLY	', image: '	https://rangers.lerico.net/res/	u1271e-sally/u1271e-sally-thum.png	'},
+{id: '	u1269h-brown/u1269h-brown-thum.png	', name: '	Shark Brown	', image: '	https://rangers.lerico.net/res/	u1269h-brown/u1269h-brown-thum.png	'},
+{id: '	u1265e-re/u1265e-re-thum.png	', name: '	Rem	', image: '	https://rangers.lerico.net/res/	u1265e-re/u1265e-re-thum.png	'},
+{id: '	u1263e-em/u1263e-em-thum.png	', name: '	Emilia	', image: '	https://rangers.lerico.net/res/	u1263e-em/u1263e-em-thum.png	'},
+{id: '	u1267h-bt/u1267h-bt-thum.png	', name: '	Beatrice	', image: '	https://rangers.lerico.net/res/	u1267h-bt/u1267h-bt-thum.png	'},
+{id: '	u1266h-ra/u1266h-ra-thum.png	', name: '	Ram	', image: '	https://rangers.lerico.net/res/	u1266h-ra/u1266h-ra-thum.png	'},
+{id: '	u1257e-boss/u1257e-boss-thum.png	', name: '	Famous Director Boss	', image: '	https://rangers.lerico.net/res/	u1257e-boss/u1257e-boss-thum.png	'},
+{id: '	u1255e-sally/u1255e-sally-thum.png	', name: '	Retro Slate Sally	', image: '	https://rangers.lerico.net/res/	u1255e-sally/u1255e-sally-thum.png	'},
+{id: '	u1251e-ov/u1251e-ov-thum.png	', name: '	Oliva	', image: '	https://rangers.lerico.net/res/	u1251e-ov/u1251e-ov-thum.png	'},
+{id: '	u1253h-edward/u1253h-edward-thum.png	', name: '	Art Film Edward	', image: '	https://rangers.lerico.net/res/	u1253h-edward/u1253h-edward-thum.png	'},
+{id: '	u1249h-dp/u1249h-dp-thum.png	', name: '	Doppo	', image: '	https://rangers.lerico.net/res/	u1249h-dp/u1249h-dp-thum.png	'},
+{id: '	u1248h-ko/u1248h-ko-thum.png	', name: '	u1248h-ko/u1248h-ko-thum.png	', image: '	https://rangers.lerico.net/res/	u1248h-ko/u1248h-ko-thum.png	'},
+{id: '	u1247e-bk/u1247e-bk-thum.png	', name: '	Baki Hanma	', image: '	https://rangers.lerico.net/res/	u1247e-bk/u1247e-bk-thum.png	'},
+{id: '	u1242e-brown/u1242e-brown-thum.png	', name: '	Anubis Brown	', image: '	https://rangers.lerico.net/res/	u1242e-brown/u1242e-brown-thum.png	'},
+{id: '	u1240e-jessica/u1240e-jessica-thum.png	', name: '	Bastet Jessica	', image: '	https://rangers.lerico.net/res/	u1240e-jessica/u1240e-jessica-thum.png	'},
+{id: '	u1238h-sally/u1238h-sally-thum.png	', name: '	Horus Sally	', image: '	https://rangers.lerico.net/res/	u1238h-sally/u1238h-sally-thum.png	'},
+{id: '	u2033e-jessica/u2033e-jessica-thum.png	', name: '	Red Jessica	', image: '	https://rangers.lerico.net/res/	u2033e-jessica/u2033e-jessica-thum.png	'},
+{id: '	u1237h-horohoro/u1237h-horohoro-thum.png	', name: '	Horohoro	', image: '	https://rangers.lerico.net/res/	u1237h-horohoro/u1237h-horohoro-thum.png	'},
+{id: '	u1235h-jun/u1235h-jun-thum.png	', name: '	Jun	', image: '	https://rangers.lerico.net/res/	u1235h-jun/u1235h-jun-thum.png	'},
+{id: '	u1234h-ren/u1234h-ren-thum.png	', name: '	Tao Ren	', image: '	https://rangers.lerico.net/res/	u1234h-ren/u1234h-ren-thum.png	'},
+{id: '	u1233h-yoh/u1233h-yoh-thum.png	', name: '	Asakura Yoh	', image: '	https://rangers.lerico.net/res/	u1233h-yoh/u1233h-yoh-thum.png	'},
+{id: '	u1261e-sally/u1261e-sally-thum.png	', name: '	Mechanical White Rabbit Sally	', image: '	https://rangers.lerico.net/res/	u1261e-sally/u1261e-sally-thum.png	'},
+{id: '	u1231h-cony/u1231h-cony-thum.png	', name: '	Alice Cat Cony	', image: '	https://rangers.lerico.net/res/	u1231h-cony/u1231h-cony-thum.png	'},
+{id: '	u1245e-moon/u1245e-moon-thum.png	', name: '	Crazy Tea Party Moon	', image: '	https://rangers.lerico.net/res/	u1245e-moon/u1245e-moon-thum.png	'},
+{id: '	u1229h-poseidon/u1229h-poseidon-thum.png	', name: '	Poseidon	', image: '	https://rangers.lerico.net/res/	u1229h-poseidon/u1229h-poseidon-thum.png	'},
+{id: '	u1228h-sasaki/u1228h-sasaki-thum.png	', name: '	Kojiro	', image: '	https://rangers.lerico.net/res/	u1228h-sasaki/u1228h-sasaki-thum.png	'},
+{id: '	u1227h-adam/u1227h-adam-thum.png	', name: '	Adam	', image: '	https://rangers.lerico.net/res/	u1227h-adam/u1227h-adam-thum.png	'},
+{id: '	u1225h-lubu/u1225h-lubu-thum.png	', name: '	Lu Bu	', image: '	https://rangers.lerico.net/res/	u1225h-lubu/u1225h-lubu-thum.png	'},
+{id: '	u1260e-brown/u1260e-brown-thum.png	', name: '	Rock Legend Brown	', image: '	https://rangers.lerico.net/res/	u1260e-brown/u1260e-brown-thum.png	'},
+{id: '	u1243e-moon/u1243e-moon-thum.png	', name: '	Legend Guitarist Moon	', image: '	https://rangers.lerico.net/res/	u1243e-moon/u1243e-moon-thum.png	'},
+{id: '	u1222h-cony/u1222h-cony-thum.png	', name: '	Keyboard Queen Cony	', image: '	https://rangers.lerico.net/res/	u1222h-cony/u1222h-cony-thum.png	'},
+{id: '	u1219h-kohaku/u1219h-kohaku-thum.png	', name: '	Kohaku	', image: '	https://rangers.lerico.net/res/	u1219h-kohaku/u1219h-kohaku-thum.png	'},
+{id: '	u1218h-moroha/u1218h-moroha-thum.png	', name: '	Moroha	', image: '	https://rangers.lerico.net/res/	u1218h-moroha/u1218h-moroha-thum.png	'},
+{id: '	u1217h-setsuna/u1217h-setsuna-thum.png	', name: '	Setsuna	', image: '	https://rangers.lerico.net/res/	u1217h-setsuna/u1217h-setsuna-thum.png	'},
+{id: '	u1216h-towa/u1216h-towa-thum.png	', name: '	Towa Higurashi	', image: '	https://rangers.lerico.net/res/	u1216h-towa/u1216h-towa-thum.png	'},
+{id: '	u1215h-ron/u1215h-ron-thum.png	', name: '	Food Cart Ron	', image: '	https://rangers.lerico.net/res/	u1215h-ron/u1215h-ron-thum.png	'},
+{id: '	u1244e-elle/u1244e-elle-thum.png	', name: '	Polar Bear Elle	', image: '	https://rangers.lerico.net/res/	u1244e-elle/u1244e-elle-thum.png	'},
+{id: '	u1258e-sally/u1258e-sally-thum.png	', name: '	Mixed Fruit Snack Sally	', image: '	https://rangers.lerico.net/res/	u1258e-sally/u1258e-sally-thum.png	'},
+{id: '	u1212h-brown/u1212h-brown-thum.png	', name: '	Angel Santa Brown	', image: '	https://rangers.lerico.net/res/	u1212h-brown/u1212h-brown-thum.png	'},
+{id: '	u1211h-maki/u1211h-maki-thum.png	', name: '	Maki	', image: '	https://rangers.lerico.net/res/	u1211h-maki/u1211h-maki-thum.png	'},
+{id: '	u1209h-shinmon/u1209h-shinmon-thum.png	', name: '	Benimaru	', image: '	https://rangers.lerico.net/res/	u1209h-shinmon/u1209h-shinmon-thum.png	'},
+{id: '	u1208h-arthur/u1208h-arthur-thum.png	', name: '	Arthur	', image: '	https://rangers.lerico.net/res/	u1208h-arthur/u1208h-arthur-thum.png	'},
+{id: '	u1207h-shinra/u1207h-shinra-thum.png	', name: '	Shinra	', image: '	https://rangers.lerico.net/res/	u1207h-shinra/u1207h-shinra-thum.png	'},
+{id: '	u1292e-moon/u1292e-moon-thum.png	', name: '	Alien Suit Moon	', image: '	https://rangers.lerico.net/res/	u1292e-moon/u1292e-moon-thum.png	'},
+{id: '	u1205h-sally/u1205h-sally-thum.png	', name: '	Little Devil Queen Sally	', image: '	https://rangers.lerico.net/res/	u1205h-sally/u1205h-sally-thum.png	'},
+{id: '	u1204h-brown/u1204h-brown-thum.png	', name: '	Zombie Candy Brown	', image: '	https://rangers.lerico.net/res/	u1204h-brown/u1204h-brown-thum.png	'},
+{id: '	u1201h-lucy/u1201h-lucy-thum.png	', name: '	Lucy	', image: '	https://rangers.lerico.net/res/	u1201h-lucy/u1201h-lucy-thum.png	'},
+{id: '	u1200h-gray/u1200h-gray-thum.png	', name: '	Gray	', image: '	https://rangers.lerico.net/res/	u1200h-gray/u1200h-gray-thum.png	'},
+{id: '	u1199h-erza/u1199h-erza-thum.png	', name: '	Erza	', image: '	https://rangers.lerico.net/res/	u1199h-erza/u1199h-erza-thum.png	'},
+{id: '	u1198h-natsu/u1198h-natsu-thum.png	', name: '	Natsu	', image: '	https://rangers.lerico.net/res/	u1198h-natsu/u1198h-natsu-thum.png	'},
+{id: '	u1197h-boss/u1197h-boss-thum.png	', name: '	CEO Boss	', image: '	https://rangers.lerico.net/res/	u1197h-boss/u1197h-boss-thum.png	'},
+{id: '	u1196u-leonard/u1196u-leonard-thum.png	', name: '	Train Leonard	', image: '	https://rangers.lerico.net/res/	u1196u-leonard/u1196u-leonard-thum.png	'},
+{id: '	u1195h-moon/u1195h-moon-thum.png	', name: '	Remote Section Chief Moon	', image: '	https://rangers.lerico.net/res/	u1195h-moon/u1195h-moon-thum.png	'},
+{id: '	u1193h-ruijerd/u1193h-ruijerd-thum.png	', name: '	Ruijerd	', image: '	https://rangers.lerico.net/res/	u1193h-ruijerd/u1193h-ruijerd-thum.png	'},
+{id: '	u1192h-roxy/u1192h-roxy-thum.png	', name: '	Roxy	', image: '	https://rangers.lerico.net/res/	u1192h-roxy/u1192h-roxy-thum.png	'},
+{id: '	u1191h-eris/u1191h-eris-thum.png	', name: '	Eris	', image: '	https://rangers.lerico.net/res/	u1191h-eris/u1191h-eris-thum.png	'},
+{id: '	u1190h-rudeus/u1190h-rudeus-thum.png	', name: '	Rudeus	', image: '	https://rangers.lerico.net/res/	u1190h-rudeus/u1190h-rudeus-thum.png	'},
+{id: '	u1189h-edward/u1189h-edward-thum.png	', name: '	Graffiti Artist Edward	', image: '	https://rangers.lerico.net/res/	u1189h-edward/u1189h-edward-thum.png	'},
+{id: '	u1188h-brown/u1188h-brown-thum.png	', name: '	Artistic Paint Roller Brown	', image: '	https://rangers.lerico.net/res/	u1188h-brown/u1188h-brown-thum.png	'},
+{id: '	u1187h-moon/u1187h-moon-thum.png	', name: '	Shooting Paint Moon	', image: '	https://rangers.lerico.net/res/	u1187h-moon/u1187h-moon-thum.png	'},
+{id: '	u1185h-lizard/u1185h-lizard-thum.png	', name: '	Lizardman Priest	', image: '	https://rangers.lerico.net/res/	u1185h-lizard/u1185h-lizard-thum.png	'},
+{id: '	u1184h-dwarf/u1184h-dwarf-thum.png	', name: '	Dwarf Shaman	', image: '	https://rangers.lerico.net/res/	u1184h-dwarf/u1184h-dwarf-thum.png	'},
+{id: '	u1183h-priestess/u1183h-priestess-thum.png	', name: '	Priestess	', image: '	https://rangers.lerico.net/res/	u1183h-priestess/u1183h-priestess-thum.png	'},
+{id: '	u1182h-gslayer/u1182h-gslayer-thum.png	', name: '	Goblin Slayer	', image: '	https://rangers.lerico.net/res/	u1182h-gslayer/u1182h-gslayer-thum.png	'},
+{id: '	u1181h-sally/u1181h-sally-thum.png	', name: '	u1181h-sally/u1181h-sally-thum.png	', image: '	https://rangers.lerico.net/res/	u1181h-sally/u1181h-sally-thum.png	'},
+{id: '	u1180h-cony/u1180h-cony-thum.png	', name: '	Black Knight Sally	', image: '	https://rangers.lerico.net/res/	u1180h-cony/u1180h-cony-thum.png	'},
+{id: '	u1178h-nene/u1178h-nene-thum.png	', name: '	Nenechan	', image: '	https://rangers.lerico.net/res/	u1178h-nene/u1178h-nene-thum.png	'},
+{id: '	u1177h-kazama/u1177h-kazama-thum.png	', name: '	Kazamakun	', image: '	https://rangers.lerico.net/res/	u1177h-kazama/u1177h-kazama-thum.png	'},
+{id: '	u1176h-hima/u1176h-hima-thum.png	', name: '	Hima&Shiro	', image: '	https://rangers.lerico.net/res/	u1176h-hima/u1176h-hima-thum.png	'},
+{id: '	u1175h-shin/u1175h-shin-thum.png	', name: '	Shinnosuke	', image: '	https://rangers.lerico.net/res/	u1175h-shin/u1175h-shin-thum.png	'},
+{id: '	u1276e-cony/u1276e-cony-thum.png	', name: '	Gamester Queen Cony	', image: '	https://rangers.lerico.net/res/	u1276e-cony/u1276e-cony-thum.png	'},
+{id: '	u1275e-brown/u1275e-brown-thum.png	', name: '	Mysterious Magician Brown	', image: '	https://rangers.lerico.net/res/	u1275e-brown/u1275e-brown-thum.png	'},
+{id: '	u1172h-moon/u1172h-moon-thum.png	', name: '	777 Moon	', image: '	https://rangers.lerico.net/res/	u1172h-moon/u1172h-moon-thum.png	'},
+{id: '	u1170h-sally/u1170h-sally-thum.png	', name: '	Demon Casino Dealer Sally	', image: '	https://rangers.lerico.net/res/	u1170h-sally/u1170h-sally-thum.png	'},
+{id: '	u1168h-reiner/u1168h-reiner-thum.png	', name: '	Reiner	', image: '	https://rangers.lerico.net/res/	u1168h-reiner/u1168h-reiner-thum.png	'},
+{id: '	u1167h-levi/u1167h-levi-thum.png	', name: '	Levi	', image: '	https://rangers.lerico.net/res/	u1167h-levi/u1167h-levi-thum.png	'},
+{id: '	u1166h-mikasa/u1166h-mikasa-thum.png	', name: '	Mikasa	', image: '	https://rangers.lerico.net/res/	u1166h-mikasa/u1166h-mikasa-thum.png	'},
+{id: '	u1165h-eren/u1165h-eren-thum.png	', name: '	Eren	', image: '	https://rangers.lerico.net/res/	u1165h-eren/u1165h-eren-thum.png	'},
+{id: '	u1164h-moon/u1164h-moon-thum.png	', name: '	Pro Hockey Player Moon	', image: '	https://rangers.lerico.net/res/	u1164h-moon/u1164h-moon-thum.png	'},
+{id: '	u1163h-sally/u1163h-sally-thum.png	', name: '	Malamute Sally	', image: '	https://rangers.lerico.net/res/	u1163h-sally/u1163h-sally-thum.png	'},
+{id: '	u1161h-cony/u1161h-cony-thum.png	', name: '	Snowboarder Cony	', image: '	https://rangers.lerico.net/res/	u1161h-cony/u1161h-cony-thum.png	'},
+{id: '	u1160h-merry/u1160h-merry-thum.png	', name: '	White Christmas MERRY	', image: '	https://rangers.lerico.net/res/	u1160h-merry/u1160h-merry-thum.png	'},
+{id: '	u1158h-welf/u1158h-welf-thum.png	', name: '	Welf	', image: '	https://rangers.lerico.net/res/	u1158h-welf/u1158h-welf-thum.png	'},
+{id: '	u1157h-ryuu/u1157h-ryuu-thum.png	', name: '	Ryu	', image: '	https://rangers.lerico.net/res/	u1157h-ryuu/u1157h-ryuu-thum.png	'},
+{id: '	u1156h-ais/u1156h-ais-thum.png	', name: '	Ais	', image: '	https://rangers.lerico.net/res/	u1156h-ais/u1156h-ais-thum.png	'},
+{id: '	u1155h-bell/u1155h-bell-thum.png	', name: '	Bell	', image: '	https://rangers.lerico.net/res/	u1155h-bell/u1155h-bell-thum.png	'},
+{id: '	u1154h-jessica/u1154h-jessica-thum.png	', name: '	Necromancer Jessica	', image: '	https://rangers.lerico.net/res/	u1154h-jessica/u1154h-jessica-thum.png	'},
+{id: '	u1153h-cony/u1153h-cony-thum.png	', name: '	Halloween Witch Cony	', image: '	https://rangers.lerico.net/res/	u1153h-cony/u1153h-cony-thum.png	'},
+{id: '	u1151h-sally/u1151h-sally-thum.png	', name: '	Crossbow Sally	', image: '	https://rangers.lerico.net/res/	u1151h-sally/u1151h-sally-thum.png	'},
+{id: '	u1149h-milim/u1149h-milim-thum.png	', name: '	Milim	', image: '	https://rangers.lerico.net/res/	u1149h-milim/u1149h-milim-thum.png	'},
+{id: '	u1148h-souei/u1148h-souei-thum.png	', name: '	Souei	', image: '	https://rangers.lerico.net/res/	u1148h-souei/u1148h-souei-thum.png	'},
+{id: '	u1147h-benimaru/u1147h-benimaru-thum.png	', name: '	Benimaru	', image: '	https://rangers.lerico.net/res/	u1147h-benimaru/u1147h-benimaru-thum.png	'},
+{id: '	u1146h-rimuru/u1146h-rimuru-thum.png	', name: '	Rimuru	', image: '	https://rangers.lerico.net/res/	u1146h-rimuru/u1146h-rimuru-thum.png	'},
+{id: '	u1145h-brown/u1145h-brown-thum.png	', name: '	Coffee Meister Brown	', image: '	https://rangers.lerico.net/res/	u1145h-brown/u1145h-brown-thum.png	'},
+{id: '	u1144h-steve/u1144h-steve-thum.png	', name: '	Deluxe Coffee Maker Steve	', image: '	https://rangers.lerico.net/res/	u1144h-steve/u1144h-steve-thum.png	'},
+{id: '	u1142h-sengoku/u1142h-sengoku-thum.png	', name: '	NADEKO	', image: '	https://rangers.lerico.net/res/	u1142h-sengoku/u1142h-sengoku-thum.png	'},
+{id: '	u1141h-hanekawa/u1141h-hanekawa-thum.png	', name: '	NADEKO	', image: '	https://rangers.lerico.net/res/	u1141h-hanekawa/u1141h-hanekawa-thum.png	'},
+{id: '	u1140h-oshino/u1140h-oshino-thum.png	', name: '	SHINOBU	', image: '	https://rangers.lerico.net/res/	u1140h-oshino/u1140h-oshino-thum.png	'},
+{id: '	u1139h-senjou/u1139h-senjou-thum.png	', name: '	HITAGI	', image: '	https://rangers.lerico.net/res/	u1139h-senjou/u1139h-senjou-thum.png	'},
+{id: '	u1138h-james/u1138h-james-thum.png	', name: '	Ultra Purple James	', image: '	https://rangers.lerico.net/res/	u1138h-james/u1138h-james-thum.png	'},
+{id: '	u1137h-cony/u1137h-cony-thum.png	', name: '	Ultra Pink Cony	', image: '	https://rangers.lerico.net/res/	u1137h-cony/u1137h-cony-thum.png	'},
+{id: '	u1136h-moon/u1136h-moon-thum.png	', name: '	Ultra Blue Moon	', image: '	https://rangers.lerico.net/res/	u1136h-moon/u1136h-moon-thum.png	'},
+{id: '	u1277e-brown2/u1277e-brown2-thum.png	', name: '	Undead Mummy Brown	', image: '	https://rangers.lerico.net/res/	u1277e-brown2/u1277e-brown2-thum.png	'},
+{id: '	u1277e-brown/u1277e-brown-thum.png	', name: '	Darkpaw Brown	', image: '	https://rangers.lerico.net/res/	u1277e-brown/u1277e-brown-thum.png	'},
+{id: '	u1132h-diane/u1132h-diane-thum.png	', name: '	Diane	', image: '	https://rangers.lerico.net/res/	u1132h-diane/u1132h-diane-thum.png	'},
+{id: '	u1131h-king/u1131h-king-thum.png	', name: '	King	', image: '	https://rangers.lerico.net/res/	u1131h-king/u1131h-king-thum.png	'},
+{id: '	u1130h-elizabeth/u1130h-elizabeth-thum.png	', name: '	Elizabeth	', image: '	https://rangers.lerico.net/res/	u1130h-elizabeth/u1130h-elizabeth-thum.png	'},
+{id: '	u1129h-meliodas/u1129h-meliodas-thum.png	', name: '	Meliodas	', image: '	https://rangers.lerico.net/res/	u1129h-meliodas/u1129h-meliodas-thum.png	'},
+{id: '	u1128h-moon/u1128h-moon-thum.png	', name: '	Space Mercenary Moon	', image: '	https://rangers.lerico.net/res/	u1128h-moon/u1128h-moon-thum.png	'},
+{id: '	u1127u-edward/u1127u-edward-thum.png	', name: '	Mechanical Armor Edward	', image: '	https://rangers.lerico.net/res/	u1127u-edward/u1127u-edward-thum.png	'},
+{id: '	u1126h-hitomi/u1126h-hitomi-thum.png	', name: '	Hitomi	', image: '	https://rangers.lerico.net/res/	u1126h-hitomi/u1126h-hitomi-thum.png	'},
+{id: '	u1125h-saeko/u1125h-saeko-thum.png	', name: '	Saeko	', image: '	https://rangers.lerico.net/res/	u1125h-saeko/u1125h-saeko-thum.png	'},
+{id: '	u1123h-kaori/u1123h-kaori-thum.png	', name: '	Kaori	', image: '	https://rangers.lerico.net/res/	u1123h-kaori/u1123h-kaori-thum.png	'},
+{id: '	u1122h-ryo/u1122h-ryo-thum.png	', name: '	Ryo	', image: '	https://rangers.lerico.net/res/	u1122h-ryo/u1122h-ryo-thum.png	'},
+{id: '	u1121h-sally/u1121h-sally-thum.png	', name: '	Private Kindergarten Sally	', image: '	https://rangers.lerico.net/res/	u1121h-sally/u1121h-sally-thum.png	'},
+{id: '	u1120h-moon/u1120h-moon-thum.png	', name: '	Rebellious Student Moon	', image: '	https://rangers.lerico.net/res/	u1120h-moon/u1120h-moon-thum.png	'},
+{id: '	u1119h-brown/u1119h-brown-thum.png	', name: '	Undergraduate Brown	', image: '	https://rangers.lerico.net/res/	u1119h-brown/u1119h-brown-thum.png	'},
+{id: '	u1117h-cony/u1117h-cony-thum.png	', name: '	High Schooler Cony	', image: '	https://rangers.lerico.net/res/	u1117h-cony/u1117h-cony-thum.png	'},
+{id: '	u1116u-claris/u1116u-claris-thum.png	', name: '	Claris	', image: '	https://rangers.lerico.net/res/	u1116u-claris/u1116u-claris-thum.png	'},
+{id: '	u1115h-anastasia/u1115h-anastasia-thum.png	', name: '	Anastasia	', image: '	https://rangers.lerico.net/res/	u1115h-anastasia/u1115h-anastasia-thum.png	'},
+{id: '	u1114h-azami/u1114h-azami-thum.png	', name: '	Azami	', image: '	https://rangers.lerico.net/res/	u1114h-azami/u1114h-azami-thum.png	'},
+{id: '	u1113h-hatsuho/u1113h-hatsuho-thum.png	', name: '	Hatsuho	', image: '	https://rangers.lerico.net/res/	u1113h-hatsuho/u1113h-hatsuho-thum.png	'},
+{id: '	u1112h-sakura/u1112h-sakura-thum.png	', name: '	Sakura	', image: '	https://rangers.lerico.net/res/	u1112h-sakura/u1112h-sakura-thum.png	'},
+{id: '	u1110h-cony/u1110h-cony-thum.png	', name: '	Plum Blossom Box Cony	', image: '	https://rangers.lerico.net/res/	u1110h-cony/u1110h-cony-thum.png	'},
+{id: '	u1109h-sally/u1109h-sally-thum.png	', name: '	Snow Moon Sally	', image: '	https://rangers.lerico.net/res/	u1109h-sally/u1109h-sally-thum.png	'},
+{id: '	u1108h-bella/u1108h-bella-thum.png	', name: '	BELLA Super Express	', image: '	https://rangers.lerico.net/res/	u1108h-bella/u1108h-bella-thum.png	'},
+{id: '	u1107h-seven/u1107h-seven-thum.png	', name: '	Ultraseven	', image: '	https://rangers.lerico.net/res/	u1107h-seven/u1107h-seven-thum.png	'},
+{id: '	u1106h-tarou/u1106h-tarou-thum.png	', name: '	Ultraman Taro	', image: '	https://rangers.lerico.net/res/	u1106h-tarou/u1106h-tarou-thum.png	'},
+{id: '	u1105h-zero/u1105h-zero-thum.png	', name: '	Ultraman Zero	', image: '	https://rangers.lerico.net/res/	u1105h-zero/u1105h-zero-thum.png	'},
+{id: '	u1103h-taiga/u1103h-taiga-thum.png	', name: '	Ultraman Taiga	', image: '	https://rangers.lerico.net/res/	u1103h-taiga/u1103h-taiga-thum.png	'},
+{id: '	u1102h-sally/u1102h-sally-thum.png	', name: '	Elixir Witch Sally	', image: '	https://rangers.lerico.net/res/	u1102h-sally/u1102h-sally-thum.png	'},
+{id: '	u1101h-boss/u1101h-boss-thum.png	', name: '	Sorcerer Boss	', image: '	https://rangers.lerico.net/res/	u1101h-boss/u1101h-boss-thum.png	'},
+{id: '	u1100h-james/u1100h-james-thum.png	', name: '	Golden Vampire James	', image: '	https://rangers.lerico.net/res/	u1100h-james/u1100h-james-thum.png	'},
+{id: '	u1098h-moon/u1098h-moon-thum.png	', name: '	Immortal Jiangshi Moon	', image: '	https://rangers.lerico.net/res/	u1098h-moon/u1098h-moon-thum.png	'},
+{id: '	u1096h-natsumi/u1096h-natsumi-thum.png	', name: '	Natsumi	', image: '	https://rangers.lerico.net/res/	u1096h-natsumi/u1096h-natsumi-thum.png	'},
+{id: '	u1095h-giroro/u1095h-giroro-thum.png	', name: '	Giroro	', image: '	https://rangers.lerico.net/res/	u1095h-giroro/u1095h-giroro-thum.png	'},
+{id: '	u1094h-tamama/u1094h-tamama-thum.png	', name: '	Tamama	', image: '	https://rangers.lerico.net/res/	u1094h-tamama/u1094h-tamama-thum.png	'},
+{id: '	u1093h-keroro/u1093h-keroro-thum.png	', name: '	Keroro	', image: '	https://rangers.lerico.net/res/	u1093h-keroro/u1093h-keroro-thum.png	'},
+{id: '	u1092h-hunt/u1092h-hunt-thum.png	', name: '	Hunt	', image: '	https://rangers.lerico.net/res/	u1092h-hunt/u1092h-hunt-thum.png	'},
+{id: '	u1090h-boss/u1090h-boss-thum.png	', name: '	Evil Croc Game Boss	', image: '	https://rangers.lerico.net/res/	u1090h-boss/u1090h-boss-thum.png	'},
+{id: '	u1088h-tonzura/u1088h-tonzura-thum.png	', name: '	Tonzura	', image: '	https://rangers.lerico.net/res/	u1088h-tonzura/u1088h-tonzura-thum.png	'},
+{id: '	u1087h-doronjo/u1087h-doronjo-thum.png	', name: '	Doronjo	', image: '	https://rangers.lerico.net/res/	u1087h-doronjo/u1087h-doronjo-thum.png	'},
+{id: '	u1086h-yatta2/u1086h-yatta2-thum.png	', name: '	Yatterman-2	', image: '	https://rangers.lerico.net/res/	u1086h-yatta2/u1086h-yatta2-thum.png	'},
+{id: '	u1085h-yatta1/u1085h-yatta1-thum.png	', name: '	Yatterman-1	', image: '	https://rangers.lerico.net/res/	u1085h-yatta1/u1085h-yatta1-thum.png	'},
+{id: '	u1084h-alice/u1084h-alice-thum.png	', name: '	Pineapple Tourist Alice	', image: '	https://rangers.lerico.net/res/	u1084h-alice/u1084h-alice-thum.png	'},
+{id: '	u1083h-crush/u1083h-crush-thum.png	', name: '	Summer Crush	', image: '	https://rangers.lerico.net/res/	u1083h-crush/u1083h-crush-thum.png	'},
+{id: '	u1082h-sally/u1082h-sally-thum.png	', name: '	Calavera Sally	', image: '	https://rangers.lerico.net/res/	u1082h-sally/u1082h-sally-thum.png	'},
+{id: '	u1080h-moon/u1080h-moon-thum.png	', name: '	Pink Mariachi Moon	', image: '	https://rangers.lerico.net/res/	u1080h-moon/u1080h-moon-thum.png	'},
+{id: '	u1079h-ryu/u1079h-ryu-thum.png	', name: '	Ryu the Owl	', image: '	https://rangers.lerico.net/res/	u1079h-ryu/u1079h-ryu-thum.png	'},
+{id: '	u1078h-jinpei/u1078h-jinpei-thum.png	', name: '	Jinpei the Swallow	', image: '	https://rangers.lerico.net/res/	u1078h-jinpei/u1078h-jinpei-thum.png	'},
+{id: '	u1077h-jun/u1077h-jun-thum.png	', name: '	Jun the Swan	', image: '	https://rangers.lerico.net/res/	u1077h-jun/u1077h-jun-thum.png	'},
+{id: '	u1076h-joe/u1076h-joe-thum.png	', name: '	Joe the Condor	', image: '	https://rangers.lerico.net/res/	u1076h-joe/u1076h-joe-thum.png	'},
+{id: '	u1075h-ken/u1075h-ken-thum.png	', name: '	Ken the Eagle	', image: '	https://rangers.lerico.net/res/	u1075h-ken/u1075h-ken-thum.png	'},
+{id: '	u1074h-cony/u1074h-cony-thum.png	', name: '	Millionaire Cony	', image: '	https://rangers.lerico.net/res/	u1074h-cony/u1074h-cony-thum.png	'},
+{id: '	u1073h-brown/u1073h-brown-thum.png	', name: '	Big Boss Brown	', image: '	https://rangers.lerico.net/res/	u1073h-brown/u1073h-brown-thum.png	'},
+{id: '	u1071h-lina/u1071h-lina-thum.png	', name: '	Lina	', image: '	https://rangers.lerico.net/res/	u1071h-lina/u1071h-lina-thum.png	'},
+{id: '	u1070h-xelloss/u1070h-xelloss-thum.png	', name: '	Xellos	', image: '	https://rangers.lerico.net/res/	u1070h-xelloss/u1070h-xelloss-thum.png	'},
+{id: '	u1069h-zelga/u1069h-zelga-thum.png	', name: '	Zelgadis	', image: '	https://rangers.lerico.net/res/	u1069h-zelga/u1069h-zelga-thum.png	'},
+{id: '	u1068h-gourry/u1068h-gourry-thum.png	', name: '	Gourry	', image: '	https://rangers.lerico.net/res/	u1068h-gourry/u1068h-gourry-thum.png	'},
+{id: '	u1067h-sally/u1067h-sally-thum.png	', name: '	Beast Tamer Sally	', image: '	https://rangers.lerico.net/res/	u1067h-sally/u1067h-sally-thum.png	'},
+{id: '	u1066h-moon/u1066h-moon-thum.png	', name: '	Fortunate Sun Seer Moon	', image: '	https://rangers.lerico.net/res/	u1066h-moon/u1066h-moon-thum.png	'},
+{id: '	u1065h-cony/u1065h-cony-thum.png	', name: '	Balloon Artist Cony	', image: '	https://rangers.lerico.net/res/	u1065h-cony/u1065h-cony-thum.png	'},
+{id: '	u1063u-brown/u1063u-brown-thum.png	', name: '	Showy Clown Brown	', image: '	https://rangers.lerico.net/res/	u1063u-brown/u1063u-brown-thum.png	'},
+{id: '	u1062h-shun/u1062h-shun-thum.png	', name: '	Akiyama	', image: '	https://rangers.lerico.net/res/	u1062h-shun/u1062h-shun-thum.png	'},
+{id: '	u1061h-goro/u1061h-goro-thum.png	', name: '	Majima	', image: '	https://rangers.lerico.net/res/	u1061h-goro/u1061h-goro-thum.png	'},
+{id: '	u1060h-haruka/u1060h-haruka-thum.png	', name: '	Haruka	', image: '	https://rangers.lerico.net/res/	u1060h-haruka/u1060h-haruka-thum.png	'},
+{id: '	u1059h-kazuma/u1059h-kazuma-thum.png	', name: '	Kiryu	', image: '	https://rangers.lerico.net/res/	u1059h-kazuma/u1059h-kazuma-thum.png	'},
+{id: '	u1058h-moon/u1058h-moon-thum.png	', name: '	Kingpin Moon	', image: '	https://rangers.lerico.net/res/	u1058h-moon/u1058h-moon-thum.png	'},
+{id: '	u1056h-brown/u1056h-brown-thum.png	', name: '	Sluggish Brown	', image: '	https://rangers.lerico.net/res/	u1056h-brown/u1056h-brown-thum.png	'},
+{id: '	u1055h-shadow/u1055h-shadow-thum.png	', name: '	Shadow	', image: '	https://rangers.lerico.net/res/	u1055h-shadow/u1055h-shadow-thum.png	'},
+{id: '	u1054h-knuckles/u1054h-knuckles-thum.png	', name: '	Knuckles	', image: '	https://rangers.lerico.net/res/	u1054h-knuckles/u1054h-knuckles-thum.png	'},
+{id: '	u1053h-tails/u1053h-tails-thum.png	', name: '	Tails	', image: '	https://rangers.lerico.net/res/	u1053h-tails/u1053h-tails-thum.png	'},
+{id: '	u1052h-sonic/u1052h-sonic-thum.png	', name: '	Sonic	', image: '	https://rangers.lerico.net/res/	u1052h-sonic/u1052h-sonic-thum.png	'},
+{id: '	u1051h-yomi/u1051h-yomi-thum.png	', name: '	Moon God Tsukuyomi Brown	', image: '	https://rangers.lerico.net/res/	u1051h-yomi/u1051h-yomi-thum.png	'},
+{id: '	u1050h-ama/u1050h-ama-thum.png	', name: '	Sun Goddess Amaterasu Cony	', image: '	https://rangers.lerico.net/res/	u1050h-ama/u1050h-ama-thum.png	'},
+{id: '	u1049h-hime/u1049h-hime-thum.png	', name: '	Soil Kushinada Hime	', image: '	https://rangers.lerico.net/res/	u1049h-hime/u1049h-hime-thum.png	'},
+{id: '	u1047h-susa/u1047h-susa-thum.png	', name: '	Storm Susanoo Fishu	', image: '	https://rangers.lerico.net/res/	u1047h-susa/u1047h-susa-thum.png	'},
+{id: '	u1046h-build/u1046h-build-thum.png	', name: '	Kamen Rider Build	', image: '	https://rangers.lerico.net/res/	u1046h-build/u1046h-build-thum.png	'},
+{id: '	u1045h-kuuga/u1045h-kuuga-thum.png	', name: '	Kamen Rider Kuuga	', image: '	https://rangers.lerico.net/res/	u1045h-kuuga/u1045h-kuuga-thum.png	'},
+{id: '	u1044h-black/u1044h-black-thum.png	', name: '	Kamen Rider Black RX	', image: '	https://rangers.lerico.net/res/	u1044h-black/u1044h-black-thum.png	'},
+{id: '	u1043h-first/u1043h-first-thum.png	', name: '	Kamen Rider 1-GO	', image: '	https://rangers.lerico.net/res/	u1043h-first/u1043h-first-thum.png	'},
+{id: '	u1042h-leonard/u1042h-leonard-thum.png	', name: '	Mysterious Forest Leonard	', image: '	https://rangers.lerico.net/res/	u1042h-leonard/u1042h-leonard-thum.png	'},
+{id: '	u1040h-sally/u1040h-sally-thum.png	', name: '	Fatal Fungus Sally	', image: '	https://rangers.lerico.net/res/	u1040h-sally/u1040h-sally-thum.png	'},
+{id: '	u1039h-akuma/u1039h-akuma-thum.png	', name: '	AKUMA	', image: '	https://rangers.lerico.net/res/	u1039h-akuma/u1039h-akuma-thum.png	'},
+{id: '	u1038h-karin/u1038h-karin-thum.png	', name: '	KARIN	', image: '	https://rangers.lerico.net/res/	u1038h-karin/u1038h-karin-thum.png	'},
+{id: '	u1037h-zang/u1037h-zang-thum.png	', name: '	ZANGIEF	', image: '	https://rangers.lerico.net/res/	u1037h-zang/u1037h-zang-thum.png	'},
+{id: '	u1036h-sakura/u1036h-sakura-thum.png	', name: '	SAKURA	', image: '	https://rangers.lerico.net/res/	u1036h-sakura/u1036h-sakura-thum.png	'},
+{id: '	u1035h-dane/u1035h-dane-thum.png	', name: '	Strict Ref Dane	', image: '	https://rangers.lerico.net/res/	u1035h-dane/u1035h-dane-thum.png	'},
+{id: '	u1033h-cony/u1033h-cony-thum.png	', name: '	Devoted Fan Cony	', image: '	https://rangers.lerico.net/res/	u1033h-cony/u1033h-cony-thum.png	'},
+{id: '	u1032h-kikyou/u1032h-kikyou-thum.png	', name: '	Kikyo	', image: '	https://rangers.lerico.net/res/	u1032h-kikyou/u1032h-kikyou-thum.png	'},
+{id: '	u1031h-kagome/u1031h-kagome-thum.png	', name: '	Kagome	', image: '	https://rangers.lerico.net/res/	u1031h-kagome/u1031h-kagome-thum.png	'},
+{id: '	u1030h-setshou/u1030h-setshou-thum.png	', name: '	Sesshomaru	', image: '	https://rangers.lerico.net/res/	u1030h-setshou/u1030h-setshou-thum.png	'},
+{id: '	u1029h-inu/u1029h-inu-thum.png	', name: '	Inuyasha	', image: '	https://rangers.lerico.net/res/	u1029h-inu/u1029h-inu-thum.png	'},
+{id: '	u1028h-sally/u1028h-sally-thum.png	', name: '	Swan Car Sally	', image: '	https://rangers.lerico.net/res/	u1028h-sally/u1028h-sally-thum.png	'},
+{id: '	u1026h-moon/u1026h-moon-thum.png	', name: '	Cavalry Moon	', image: '	https://rangers.lerico.net/res/	u1026h-moon/u1026h-moon-thum.png	'},
+{id: '	u1025h-sally/u1025h-sally-thum.png	', name: '	Mark.09 Sally	', image: '	https://rangers.lerico.net/res/	u1025h-sally/u1025h-sally-thum.png	'},
+{id: '	u1024h-cony/u1024h-cony-thum.png	', name: '	Unit-02 ? (Rebuild) Cony	', image: '	https://rangers.lerico.net/res/	u1024h-cony/u1024h-cony-thum.png	'},
+{id: '	u1023h-brown/u1023h-brown-thum.png	', name: '	Unit-13 Brown	', image: '	https://rangers.lerico.net/res/	u1023h-brown/u1023h-brown-thum.png	'},
+{id: '	u1022h-brown/u1022h-brown-thum.png	', name: '	Valiant Shu General Brown	', image: '	https://rangers.lerico.net/res/	u1022h-brown/u1022h-brown-thum.png	'},
+{id: '	u1020h-moon/u1020h-moon-thum.png	', name: '	Shu Emperor Moon	', image: '	https://rangers.lerico.net/res/	u1020h-moon/u1020h-moon-thum.png	'},
+{id: '	u1019h-andro/u1019h-andro-thum.png	', name: '	Shun	', image: '	https://rangers.lerico.net/res/	u1019h-andro/u1019h-andro-thum.png	'},
+{id: '	u1018h-dragon/u1018h-dragon-thum.png	', name: '	Shiryu	', image: '	https://rangers.lerico.net/res/	u1018h-dragon/u1018h-dragon-thum.png	'},
+{id: '	u1017h-cygnus/u1017h-cygnus-thum.png	', name: '	Hyoga	', image: '	https://rangers.lerico.net/res/	u1017h-cygnus/u1017h-cygnus-thum.png	'},
+{id: '	u1016h-pegasus/u1016h-pegasus-thum.png	', name: '	Seiya	', image: '	https://rangers.lerico.net/res/	u1016h-pegasus/u1016h-pegasus-thum.png	'},
+{id: '	u1015h-sally/u1015h-sally-thum.png	', name: '	Black Daruma Sally	', image: '	https://rangers.lerico.net/res/	u1015h-sally/u1015h-sally-thum.png	'},
+{id: '	u1014h-cony/u1014h-cony-thum.png	', name: '	Lovely Miko Cony	', image: '	https://rangers.lerico.net/res/	u1014h-cony/u1014h-cony-thum.png	'},
+{id: '	u1013h-brown/u1013h-brown-thum.png	', name: '	Mochi Pro Brown	', image: '	https://rangers.lerico.net/res/	u1013h-brown/u1013h-brown-thum.png	'},
+{id: '	u1012h-forte/u1012h-forte-thum.png	', name: '	BASS	', image: '	https://rangers.lerico.net/res/	u1012h-forte/u1012h-forte-thum.png	'},
+{id: '	u1011h-blues/u1011h-blues-thum.png	', name: '	PROTO MAN	', image: '	https://rangers.lerico.net/res/	u1011h-blues/u1011h-blues-thum.png	'},
+{id: '	u1010h-rockman/u1010h-rockman-thum.png	', name: '	MEGA MAN	', image: '	https://rangers.lerico.net/res/	u1010h-rockman/u1010h-rockman-thum.png	'},
+{id: '	u1009h-sally/u1009h-sally-thum.png	', name: '	Palm Tree Cave Sally	', image: '	https://rangers.lerico.net/res/	u1009h-sally/u1009h-sally-thum.png	'},
+{id: '	u1008h-brown/u1008h-brown-thum.png	', name: '	ThundersaurBrown	', image: '	https://rangers.lerico.net/res/	u1008h-brown/u1008h-brown-thum.png	'},
+{id: '	u1007h-cony/u1007h-cony-thum.png	', name: '	Wonder Dino Cony	', image: '	https://rangers.lerico.net/res/	u1007h-cony/u1007h-cony-thum.png	'},
+{id: '	u1006h-moon/u1006h-moon-thum.png	', name: '	Bard Shakespeare Moon	', image: '	https://rangers.lerico.net/res/	u1006h-moon/u1006h-moon-thum.png	'},
+{id: '	u1005h-james/u1005h-james-thum.png	', name: '	Composer Mozart James	', image: '	https://rangers.lerico.net/res/	u1005h-james/u1005h-james-thum.png	'},
+{id: '	u1004u-sally/u1004u-sally-thum.png	', name: '	DaVinci Sally	', image: '	https://rangers.lerico.net/res/	u1004u-sally/u1004u-sally-thum.png	'},
+{id: '	u1003h-jessica/u1003h-jessica-thum.png	', name: '	Warrior Athena Jessica	', image: '	https://rangers.lerico.net/res/	u1003h-jessica/u1003h-jessica-thum.png	'},
+{id: '	u1002h-cony/u1002h-cony-thum.png	', name: '	u1002h-cony/u1002h-cony-thum.png	', image: '	https://rangers.lerico.net/res/	u1002h-cony/u1002h-cony-thum.png	'},
+{id: '	u1001h-brown/u1001h-brown-thum.png	', name: '	Alastor Zeus Brown	', image: '	https://rangers.lerico.net/res/	u1001h-brown/u1001h-brown-thum.png	'},
+{id: '	u477u-godot/u477u-godot-thum.png	', name: '	Godot	', image: '	https://rangers.lerico.net/res/	u477u-godot/u477u-godot-thum.png	'},
+{id: '	u476u-maya/u476u-maya-thum.png	', name: '	Maya	', image: '	https://rangers.lerico.net/res/	u476u-maya/u476u-maya-thum.png	'},
+{id: '	u475u-miles/u475u-miles-thum.png	', name: '	Edgeworth	', image: '	https://rangers.lerico.net/res/	u475u-miles/u475u-miles-thum.png	'},
+{id: '	u474u-wright/u474u-wright-thum.png	', name: '	Phoenix	', image: '	https://rangers.lerico.net/res/	u474u-wright/u474u-wright-thum.png	'},
+{id: '	u473u-pico/u473u-pico-thum.png	', name: '	Starlit Sea Pico	', image: '	https://rangers.lerico.net/res/	u473u-pico/u473u-pico-thum.png	'},
+{id: '	u471u-cony/u471u-cony-thum.png	', name: '	Shining Sea Cony	', image: '	https://rangers.lerico.net/res/	u471u-cony/u471u-cony-thum.png	'},
+{id: '	u468h-chunli/u468h-chunli-thum.png	', name: '	Chun-Li	', image: '	https://rangers.lerico.net/res/	u468h-chunli/u468h-chunli-thum.png	'},
+{id: '	u467h-ryu/u467h-ryu-thum.png	', name: '	Ryu	', image: '	https://rangers.lerico.net/res/	u467h-ryu/u467h-ryu-thum.png	'},
+{id: '	u464u-brown/u464u-brown-thum.png	', name: '	Shish Kebab Brown	', image: '	https://rangers.lerico.net/res/	u464u-brown/u464u-brown-thum.png	'},
+{id: '	u458h-jessica/u458h-jessica-thum.png	', name: '	Prophet Jessica	', image: '	https://rangers.lerico.net/res/	u458h-jessica/u458h-jessica-thum.png	'},
+{id: '	u406u-cony/u406u-cony-thum.png	', name: '	Coast Guard Cony	', image: '	https://rangers.lerico.net/res/	u406u-cony/u406u-cony-thum.png	'},
+{id: '	u431h-cony/u431h-cony-thum.png	', name: '	Purple Champagne Cony	', image: '	https://rangers.lerico.net/res/	u431h-cony/u431h-cony-thum.png	'},
+{id: '	u388h-moon/u388h-moon-thum.png	', name: '	Dark Hero Moon	', image: '	https://rangers.lerico.net/res/	u388h-moon/u388h-moon-thum.png	'}
+
+];
+
+var myPicker = new picker.Picker({
+    items: items
+});
+
+var pickerUI = new PickerUI(myPicker, {
+    elements: {
+        pick: "#pick",
+        pass: "#pass",
+        undo: "#undo",
+        redo: "#redo",
+        evaluating: "#evaluating",
+        favorites: "#favorites"
+    }
+});
+
+pickerUI.initialize();
+
+/* Sortable favorites - you can safely remove this, and the Sortable.min.js script, if you don't want to be able to sort your favorite list. */
+var sortable = new Sortable(pickerUI.elem.favorites.get(0), {
+    draggable: '.item',
+    animation: 100,
+    onStart: function() {
+        pickerUI.elem.favorites.addClass("sorting");
+    },
+    onEnd: function() {
+        pickerUI.elem.favorites.removeClass("sorting");
+    },
+    onUpdate: function() {
+        myPicker.setFavorites(pickerUI.elem.favorites.children().map(function() {
+            return pickerUI.getItem(this);
+        }).get());
+        pickerUI.update(true);
+    }
+});
+/* End sortable favorites */
+</script>
+</body>
+</html>
