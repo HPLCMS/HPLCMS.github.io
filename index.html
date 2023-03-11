@@ -218,7 +218,12 @@ button.disabled:hover {
 <ul id="evaluating" class="item-list">
 </ul>
 
-<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button></p>
+<p id="buttons"><button id="pick">Pick</button> <button id="pass">Pass</button> <button id="undo">Undo</button> <button id="redo">Redo</button> <button id="reset">Reset</button></p>
+
+<p><label>Maximum batch size: <input type="number" id="max-batch-size" value="24" min="2" max="24" step="1"></label>
+
+<span class="help-text">The maximum number of rangers shown at a time. When there are few rangers left in a round, you'll see fewer than this. Reducing the maximum batch size may make it easier to pick, but it will also take longer to get through each round.</span></p>
+
 </div>
 
 <div id="secondary">
@@ -409,7 +414,11 @@ var items = [
 
 var myPicker = new picker.Picker({
     items: items,
-    localStorageKey: '12345'
+    localStorageKey: 'picker-state',
+    defaultSettings: {
+        minBatchSize: 2,
+        maxBatchSize: 24
+    }
 });
 
 var pickerUI = new PickerUI(myPicker, {
@@ -418,10 +427,17 @@ var pickerUI = new PickerUI(myPicker, {
         pass: "#pass",
         undo: "#undo",
         redo: "#redo",
+        reset: "#reset",
         evaluating: "#evaluating",
-        favorites: "#favorites"
+        favorites: "#favorites",
+        settings: {
+        maxBatchSize: '#max-batch-size'
     }
+}
 });
+
+
+
 
 pickerUI.initialize();
 
